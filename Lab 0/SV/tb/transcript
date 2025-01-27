@@ -1,0 +1,37 @@
+# //  Questa Sim-64
+# //  Version 2023.4 win64 Oct  9 2023
+# //
+# //  Copyright 1991-2023 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# do regfile.do
+# QuestaSim-64 vlog 2023.4 Compiler 2023.10 Oct  9 2023
+# Start time: 09:56:34 on Jan 27,2025
+# vlog -reportprogress 300 ../tb/regfile_tb.sv ../src/regfile.sv 
+# -- Compiling module regfiletb
+# -- Compiling module regfile
+# 
+# Top level modules:
+# 	regfiletb
+# End time: 09:56:34 on Jan 27,2025, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# vsim -voptargs="+acc" work.regfiletb 
+# Start time: 09:56:34 on Jan 27,2025
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
+# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=1.
+# Loading sv_std.std
+# Loading work.regfiletb(fast)
+# Loading work.regfile(fast)
+# .main_pane.list.interior.cs.body
+# .main_pane.wave.interior.cs.body.pw.wf
+# End time: 10:00:18 on Jan 27,2025, Elapsed time: 0:03:44
+# Errors: 0, Warnings: 1
