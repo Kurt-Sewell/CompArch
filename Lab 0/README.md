@@ -14,3 +14,14 @@ associated with Lab 0.  It should be modified to handle its behavior.
 The fsm_tb.sv and fsm.do should be modified to simulate the register
 file.  For more information on a register file see Chapter 5 in DDCA.  
 
+
+DESC:
+	In this lab we edited the fsm test bench file to ensure that it runs corrrectly.
+	Then we wrote a register file that supports two concurrent reads and one write when 
+	write is enabled. We then wrote a test bench that tested the following cases:
+	
+	1. Trying to write data while write Enable is low.
+	2. Writing data to an address.
+	3. Reading from address 0.
+	4. Reading from two addresses at the same time.
+	
