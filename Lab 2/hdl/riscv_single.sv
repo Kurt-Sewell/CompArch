@@ -132,8 +132,8 @@ module maindec (input  logic [6:0] op,
    always_comb
      case(op)
        // RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_Branch_ALUOp_Jump
-       7'b0000011: controls = 11'b1_00_1_0_01_0_00_0; // lw
-       7'b0100011: controls = 11'b0_01_1_1_00_0_00_0; // sw
+       7'b0000011: controls = 11'b1_00_1_0_01_0_00_0; // lw <-- how do I distinguish between lw, lh, and lb? Case statement?
+       7'b0100011: controls = 11'b0_01_1_1_00_0_00_0; // sw <-- same question for sw, sh, and sb
        7'b0110011: controls = 11'b1_xx_0_0_00_0_10_0; // R–type
        7'b1100011: controls = 11'b0_10_0_0_00_1_01_0; // beq
        7'b0010011: controls = 11'b1_00_1_0_00_0_10_0; // I–type ALU
@@ -150,7 +150,7 @@ module aludec (input  logic       opb5,
 	       output logic [2:0] ALUControl);
    
    logic 			  RtypeSub;
-   
+   //Define these in line 322
    assign RtypeSub = funct7b5 & opb5; // TRUE for R–type subtract
    always_comb
      case(ALUOp)
@@ -164,6 +164,7 @@ module aludec (input  logic       opb5,
 		  3'b010: ALUControl = 3'b101; // slt, slti
 		  3'b110: ALUControl = 3'b011; // or, ori
 		  3'b111: ALUControl = 3'b010; // and, andi
+      3'b100: ALUControl = 3'b100; // xor, xori is it fine to have ALUOp and ALUControl assigned to the same number?
 		  default: ALUControl = 3'bxxx; // ???
 		endcase // case (funct3)       
      endcase // case (ALUOp)
@@ -324,6 +325,7 @@ module alu (input  logic [31:0] a, b,
        3'b001:  result = sum;         // subtract
        3'b010:  result = a & b;       // and
        3'b011:  result = a | b;       // or
+       3'b100:  result = a ^ b;       // xor
        3'b101:  result = sum[31] ^ v; // slt       
        default: result = 32'bx;
      endcase
