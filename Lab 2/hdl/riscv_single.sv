@@ -25,6 +25,34 @@
 //   sw           0100011   010       immediate
 //   jal          1101111   immediate immediate
 
+//Done in lab
+// Instruction    opcode    funt3     funct7
+// auipc                            
+// bge                              
+// bgeu                             
+// blt                              
+// bltu                             
+// bne            1100011   001       immediate <--- CURRENT
+// jalr                             
+// lb                               
+// lbu                              
+// lh                               
+// lhu                              
+// lui            0110111   immediate immediate   
+// sb                               
+// sh                               
+// sll                              
+// slli                             
+// sltiu                            
+// sltu                             
+// sra                              
+// srai                             
+// srl                              
+// srli                             
+// xor            0110011   100       0000000
+// xori           0010011   100       immediate
+
+
 module testbench();
 
    logic        clk;
@@ -40,7 +68,7 @@ module testbench();
    initial
      begin
 	string memfilename;
-        memfilename = {"../riscvtest/riscvtest.memfile"};
+        memfilename = {"../testing/xor.memfile"};
         $readmemh(memfilename, dut.imem.RAM);
      end
 
@@ -80,7 +108,7 @@ module riscvsingle (input  logic        clk, reset,
 		    input  logic [31:0] ReadData);
    
    logic 				ALUSrc, RegWrite, Jump, Zero;
-   logic [1:0] 				ResultSrc, ImmSrc;
+   logic [2:0] 				ResultSrc, ImmSrc;
    logic [2:0] 				ALUControl;
    
    controller c (Instr[6:0], Instr[14:12], Instr[30], Zero,
@@ -103,7 +131,7 @@ module controller (input  logic [6:0] op,
 		   output logic       MemWrite,
 		   output logic       PCSrc, ALUSrc,
 		   output logic       RegWrite, Jump,
-		   output logic [1:0] ImmSrc,
+		   output logic [2:0] ImmSrc,
 		   output logic [2:0] ALUControl);
    
    logic [1:0] 			      ALUOp;
@@ -121,7 +149,7 @@ module maindec (input  logic [6:0] op,
 		output logic 	   MemWrite,
 		output logic 	   Branch, ALUSrc,
 		output logic 	   RegWrite, Jump,
-		output logic [1:0] ImmSrc,
+		output logic [2:0] ImmSrc,
 		output logic [1:0] ALUOp);
    
    logic [10:0] 		   controls;
@@ -132,13 +160,27 @@ module maindec (input  logic [6:0] op,
    always_comb
      case(op)
        // RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_Branch_ALUOp_Jump
-       7'b0000011: controls = 11'b1_00_1_0_01_0_00_0; // lw <-- how do I distinguish between lw, lh, and lb? Case statement?
-       7'b0100011: controls = 11'b0_01_1_1_00_0_00_0; // sw <-- same question for sw, sh, and sb
-       7'b0110011: controls = 11'b1_xx_0_0_00_0_10_0; // R–type
-       7'b1100011: controls = 11'b0_10_0_0_00_1_01_0; // beq
-       7'b0010011: controls = 11'b1_00_1_0_00_0_10_0; // I–type ALU
-       7'b1101111: controls = 11'b1_11_0_0_10_0_00_1; // jal
-       default: controls = 11'bx_xx_x_x_xx_x_xx_x; // ???
+       7'b0000011: case(funct3)                     //Not sure if this is the correct way to implement this
+          000:  controls = 12'b1_000_1_0_01_0_00_0; // lb <--- controls is wrong
+          001:  controls = 12'b1_000_1_0_01_0_00_0; // lh <--- controls is wrong
+          100:  controls = 12'b1_000_1_0_01_0_00_0; // lbu <-- controls is wrong
+          101:  controls = 12'b1_000_1_0_01_0_00_0; // lhu <-- controls is wrong
+          default: controls = 12'b1_000_1_0_01_0_00_0;  // lw
+       endcase
+       7'b0100011: controls = 12'b0_001_1_1_00_0_00_0; // sw
+       7'b0110011: controls = 12'b1_xxx_0_0_00_0_10_0; // R–type
+       7'b1100011: case(funct3)
+        001: controls = 12'b0_010_0_0_00_1_01_0; // bne <--- controls is wrong
+        100: controls = 12'b0_010_0_0_00_1_01_0; // blt <--- controls is wrong
+        101: controls = 12'b0_010_0_0_00_1_01_0; // bge <--- controls is wrong
+        110: controls = 12'b0_010_0_0_00_1_01_0; // bltu <--- controls is wrong
+        111: controls = 12'b0_010_0_0_00_1_01_0; // bgeu <--- controls is wrong
+        default: controls = 12'b0_010_0_0_00_1_01_0; // beq
+        endcase
+       7'b0010011: controls = 12'b1_000_1_0_00_0_10_0; // I–type ALU
+       7'b1101111: controls = 12'b1_011_0_0_10_0_00_1; // jal
+       7'b0110111: controls = 12'b1_100_1_0_01_0_00_0; // lui
+       default: controls = 12'bx_xxx_x_x_xx_x_xx_x; // ???
      endcase // case (op)
    
 endmodule // maindec
@@ -150,7 +192,7 @@ module aludec (input  logic       opb5,
 	       output logic [2:0] ALUControl);
    
    logic 			  RtypeSub;
-   //Define these in line 322
+   //322
    assign RtypeSub = funct7b5 & opb5; // TRUE for R–type subtract
    always_comb
      case(ALUOp)
@@ -164,7 +206,7 @@ module aludec (input  logic       opb5,
 		  3'b010: ALUControl = 3'b101; // slt, slti
 		  3'b110: ALUControl = 3'b011; // or, ori
 		  3'b111: ALUControl = 3'b010; // and, andi
-      3'b100: ALUControl = 3'b100; // xor, xori is it fine to have ALUOp and ALUControl assigned to the same number?
+      3'b100: ALUControl = 3'b100; // xor, xori
 		  default: ALUControl = 3'bxxx; // ???
 		endcase // case (funct3)       
      endcase // case (ALUOp)
@@ -175,7 +217,7 @@ module datapath (input  logic        clk, reset,
 		 input  logic [1:0]  ResultSrc,
 		 input  logic 	     PCSrc, ALUSrc,
 		 input  logic 	     RegWrite,
-		 input  logic [1:0]  ImmSrc,
+		 input  logic [2:0]  ImmSrc,
 		 input  logic [2:0]  ALUControl,
 		 output logic 	     Zero,
 		 output logic [31:0] PC,
@@ -212,19 +254,21 @@ module adder (input  logic [31:0] a, b,
 endmodule
 
 module extend (input  logic [31:7] instr,
-	       input  logic [1:0]  immsrc,
+	       input  logic [2:0]  immsrc,
 	       output logic [31:0] immext);
    
    always_comb
      case(immsrc)
        // I−type
-       2'b00:  immext = {{20{instr[31]}}, instr[31:20]};
+       3'b000:  immext = {{20{instr[31]}}, instr[31:20]};
        // S−type (stores)
-       2'b01:  immext = {{20{instr[31]}}, instr[31:25], instr[11:7]};
+       3'b001:  immext = {{20{instr[31]}}, instr[31:25], instr[11:7]};
        // B−type (branches)
-       2'b10:  immext = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};       
+       3'b010:  immext = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};       
        // J−type (jal)
-       2'b11:  immext = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
+       3'b011:  immext = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
+       // U-type (lui)
+       3'b100:  immext = {instr[31:12], 4'b0};
        default: immext = 32'bx; // undefined
      endcase // case (immsrc)
    
@@ -325,7 +369,7 @@ module alu (input  logic [31:0] a, b,
        3'b001:  result = sum;         // subtract
        3'b010:  result = a & b;       // and
        3'b011:  result = a | b;       // or
-       3'b100:  result = a ^ b;       // xor
+       3'b100:  result = a ^ b;       //xor
        3'b101:  result = sum[31] ^ v; // slt       
        default: result = 32'bx;
      endcase
