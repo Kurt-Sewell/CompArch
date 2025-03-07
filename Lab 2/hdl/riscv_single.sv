@@ -136,11 +136,19 @@ module controller (input  logic [6:0] op,
    
    logic [1:0] 			      ALUOp;
    logic 			      Branch;
+   logic            BC;
+
+   always_comb
+    case(funct3)
+    3'b000: BC = Zero;      //beq
+    3'b001: BC = ~Zero;     //bne
+    defualt: BC = 1'b0;
+    endcase
    
    maindec md (op, ResultSrc, MemWrite, Branch,
 	       ALUSrc, RegWrite, Jump, ImmSrc, ALUOp);
    aludec ad (op[5], funct3, funct7b5, ALUOp, ALUControl);
-   assign PCSrc = Branch & (Zero ^ funct3[0]) | Jump;
+   assign PCSrc = Branch & BC | Jump; //(Zero ^ funct3[0])
    
 endmodule // controller
 
@@ -160,23 +168,10 @@ module maindec (input  logic [6:0] op,
    always_comb
      case(op)
        // RegWrite_ImmSrc_ALUSrc_MemWrite_ResultSrc_Branch_ALUOp_Jump
-       7'b0000011: case(funct3)                     //Not sure if this is the correct way to implement this
-          000:  controls = 12'b1_000_1_0_01_0_00_0; // lb <--- controls is wrong
-          001:  controls = 12'b1_000_1_0_01_0_00_0; // lh <--- controls is wrong
-          100:  controls = 12'b1_000_1_0_01_0_00_0; // lbu <-- controls is wrong
-          101:  controls = 12'b1_000_1_0_01_0_00_0; // lhu <-- controls is wrong
-          default: controls = 12'b1_000_1_0_01_0_00_0;  // lw
-       endcase
+       7'b0000011: controls = 12'b1_000_1_0_01_0_00_0;  // lw
        7'b0100011: controls = 12'b0_001_1_1_00_0_00_0; // sw
        7'b0110011: controls = 12'b1_xxx_0_0_00_0_10_0; // R–type
-       7'b1100011: case(funct3)
-        001: controls = 12'b0_010_0_0_xx_1_01_0; // bne <--- controls is wrong
-        100: controls = 12'b0_010_0_0_00_1_01_0; // blt <--- controls is wrong
-        101: controls = 12'b0_010_0_0_00_1_01_0; // bge <--- controls is wrong
-        110: controls = 12'b0_010_0_0_00_1_01_0; // bltu <--- controls is wrong
-        111: controls = 12'b0_010_0_0_00_1_01_0; // bgeu <--- controls is wrong
-        default: controls = 12'b0_010_0_0_xx_1_01_0; // beq
-        endcase
+       7'b1100011: controls = 12'b0_010_0_0_xx_1_01_0; // beq
        7'b0010011: controls = 12'b1_000_1_0_00_0_10_0; // I–type ALU
        7'b1101111: controls = 12'b1_011_0_0_10_0_00_1; // jal
        7'b0110111: controls = 12'b1_100_1_0_01_0_00_0; // lui
